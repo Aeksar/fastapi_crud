@@ -1,28 +1,24 @@
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional
+from typing import Optional
 from uuid import UUID
 
 from src.utils.enums import TaskStatusEnum
 
-IDField = Field(..., description="Уникальный идентификатор задачи")
-NameField = Field(max_length=150, min_length=1, description="Название задачи")
-DescField = Field(max_length=555, default=None, description="Описание задачи")
-StatusField = Field(default=TaskStatusEnum.CREATED, description="Статус задачи")
+class TaskBase(BaseModel):
+    name: str = Field(max_length=150, min_length=1)
+    description: Optional[str] = Field(default=None, max_length=555)
+    status: TaskStatusEnum = Field(default=TaskStatusEnum.CREATED)
 
-class TaskModel(BaseModel):
-    id: UUID = IDField
-    name: str = NameField
-    description: Optional[str] = DescField
-    status: TaskStatusEnum = StatusField
+class TaskCreate(TaskBase):
+    ...
 
+class TaskUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=150, min_length=1)
+    description: Optional[str] = Field(default=None, max_length=555)
+    status: Optional[TaskStatusEnum] = Field(default=None)
 
-class TaskUpdateModel(BaseModel):
-    name: Optional[str] = NameField
-    description: Optional[str] = DescField
-    status: Optional[TaskStatusEnum] = StatusField
+class TaskResponse(TaskBase):
+    id: UUID
 
-
-class TaskCreateModel(BaseModel):
-    name: str = NameField
-    description: Optional[str] = DescField
-    status: TaskStatusEnum = StatusField
+    class Config:
+        from_attributes = True

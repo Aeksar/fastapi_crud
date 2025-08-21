@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 
 
+GLOBAL_PREFIX = "/api/v1"
+
 class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: str

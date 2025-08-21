@@ -1,2 +1,2 @@
 from .logs import logger
-from .environment import settings
+from .environment import settings, GLOBAL_PREFIX

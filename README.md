@@ -19,6 +19,8 @@
 - FastAPI
 - Uvicorn
 - SQLAlchemy
+- Alembic
+- Pytest
 
 ## Установка
 
@@ -38,6 +40,10 @@
 4. Запустите сервер:
    ```bash
    uvicorn main:app --reload
+   ```
+   или
+   ```bash
+   python main.py
    ```
 
 ## Альтернативная установка (Docker)

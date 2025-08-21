@@ -19,6 +19,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    
+  api:
+    build: .
+    container_name: api
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
 
 
 volumes:

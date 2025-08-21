@@ -1,12 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
-from sqlalchemy import select, update, delete, insert
-from fastapi import Depends
-from uuid import UUID, uuid4
-from typing import Optional, Annotated
+from sqlalchemy import select, update, delete
+from uuid import UUID
+from typing import Optional
 
 from src.repositories.abc import BaseTaskRepository
-from src.db import Task, get_async_session
+from src.db import Task
 from src.utils.enums import TaskStatusEnum
 from src.api.models.task import TaskResponse, TaskCreate, TaskUpdate
 from src.exc.api import NotFoundException
@@ -82,7 +81,3 @@ class TaskRepository(BaseTaskRepository):
             logger.error(f"Error with create task: {e}")
             await self.session.rollback()
             raise
-        
-
-def get_task_repo(session: Annotated[AsyncSession, Depends(get_async_session)]) -> BaseTaskRepository:
-    return TaskRepository(session)

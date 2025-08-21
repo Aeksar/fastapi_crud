@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends, status
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories.task import get_task_repo, BaseTaskRepository
+from src.repositories.abc import BaseTaskRepository
+from src.repositories.task import TaskRepository
 from src.api.models.task import TaskCreate, TaskResponse, TaskUpdate
 from src.utils.enums import TaskStatusEnum
+from src.db.core import get_async_session, AsyncSession
 
 
-task_router = APIRouter(prefix="/task", tags=["Tasks"])
+task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
+
+def get_task_repo(session: Annotated[AsyncSession, Depends(get_async_session)]) -> TaskRepository:
+    return TaskRepository(session)
 
 
 @task_router.get("/", response_model=list[TaskResponse])
@@ -26,7 +31,7 @@ async def create_task(
     task: TaskCreate,
     repo: Annotated[BaseTaskRepository, Depends(get_task_repo)],
 ):
-    """"""
+    """Создает новую задачу"""
     return await repo.create(task)
 
 
@@ -35,6 +40,7 @@ async def get_task(
     task_id: UUID,
     repo: Annotated[BaseTaskRepository, Depends(get_task_repo)],
 ):
+    """Возвращает одну задачу"""
     return await repo.get(task_id)
 
 
@@ -44,6 +50,7 @@ async def update_task(
     task_update: TaskUpdate,
     repo: Annotated[BaseTaskRepository, Depends(get_task_repo)],
 ):
+    """Обновляет задачу"""
     return await repo.update(task_id, task_update)
 
 
@@ -52,4 +59,5 @@ async def delete_task(
     task_id: UUID,
     repo: Annotated[BaseTaskRepository, Depends(get_task_repo)],
 ):
+    """Удаляет задачу"""
     return await repo.delete(task_id)

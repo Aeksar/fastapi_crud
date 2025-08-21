@@ -1,1 +1,1 @@
-from .task import get_task_repo, TaskRepository
+from .task import TaskRepository

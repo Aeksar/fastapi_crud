@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     def TEST_ASYNC_DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.TEST_DB_HOST}:{self.DB_PORT}/{self.TEST_DB_NAME}"
     
+    @property
+    def TEST_DATABASE_URL(self):
+        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.TEST_DB_HOST}:{self.DB_PORT}/{self.TEST_DB_NAME}"
+
+    
     model_config = ConfigDict(
         env_file = ".env"
     )

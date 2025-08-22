@@ -22,7 +22,6 @@ jobs:
         env:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${secrets.TEST_DB_NAME}
           
     steps:
     - uses: actions/checkout@v4
@@ -42,6 +41,6 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_NAME: db
         TEST_DB_HOST: localhost
-        TEST_DB_NAME: test_db
+        TEST_DB_NAME: postgres
       run: |
         pytest

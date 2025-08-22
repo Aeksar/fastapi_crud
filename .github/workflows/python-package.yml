@@ -19,9 +19,6 @@ jobs:
         image: postgres:13
         ports:
           - 5432:5432
-        env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           
     steps:
     - uses: actions/checkout@v4

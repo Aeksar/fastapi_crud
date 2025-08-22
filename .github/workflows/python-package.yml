@@ -35,6 +35,8 @@ jobs:
         POSTGRES_HOST: ${{ secrets.DB_HOST }}
         POSTGRES_PORT: ${{ secrets.DB_PORT }}
       run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
         psql "postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/postgres" \
           -c "CREATE DATABASE test_db;"
     - name: Test with pytest

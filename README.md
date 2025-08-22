@@ -44,7 +44,12 @@
    - TEST_DB_HOST
    - TEST_DB_NAME
 
-4. Запустите сервер:
+4. Примените миграции:
+   ```bash
+     alembic upgrade head
+   ```
+
+5. Запустите сервер:
    ```bash
    uvicorn main:app --reload
    ```

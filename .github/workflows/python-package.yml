@@ -19,7 +19,14 @@ jobs:
         image: postgres:13
         ports:
           - 5432:5432
-          
+        env:
+          POSTGRES_PASSWORD: ${secrets.DB_PASSWORD}
+          POSTGRES_USER: ${secrets.DB_PASSWORD}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
@@ -30,6 +37,8 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    - name: Wait Postres
+      run: sleep 3
     - name: Test with pytest
       env:
         DB_HOST: localhost

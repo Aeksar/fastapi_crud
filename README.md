@@ -36,7 +36,7 @@
    pip install -r requirements.txt
    ```
 
-3. Настройте подключение к базе данных, указав в файле .env следущие переменные:
+3. Настройте подключение к PostgreSQL и Redis, указав в файле .env следущие переменные:
    - DB_HOST
    - DB_PORT
    - DB_USER
@@ -44,6 +44,12 @@
    - DB_NAME
    - TEST_DB_HOST
    - TEST_DB_NAME
+  
+   - REDIS_PORT
+   - REDIS_HOST
+   - REDIS_PASSWORD
+   - REDIS_USERNAME
+   - REDIS_DB
 
 4. Примените миграции:
    ```bash

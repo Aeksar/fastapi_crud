@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories.abc import BaseTaskRepository
-from src.repositories.task import TaskRepository
+from src.repositories import BaseTaskRepository, TaskRepository
 from src.api.models.task import TaskCreate, TaskResponse, TaskUpdate
 from src.utils.enums import TaskStatusEnum
-from src.db.core import get_async_session, AsyncSession
+from src.db.core import get_async_session
 
 
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])

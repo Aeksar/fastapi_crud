@@ -1,2 +1,2 @@
 from .models import Task
-from .core import get_async_session
+from .core import get_async_session, Base

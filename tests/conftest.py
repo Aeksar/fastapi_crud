@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy import create_engine
 import pytest
 
-from src.db.core import Base
+from src.db import Base
 from src.api.endpoints.task import get_async_session
 from src.settings.environment import settings
 from main import app

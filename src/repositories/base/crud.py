@@ -1,0 +1,82 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import NoResultFound, SQLAlchemyError
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import select, update, delete
+from pydantic import BaseModel
+from uuid import UUID
+from typing import Type
+
+from src.repositories.base.abc import BaseCrudRepository, TModel, TResponse
+from src.db import Task
+from src.exc.api import NotFoundException
+from src.settings import logger
+
+
+class CrudRepository(BaseCrudRepository):
+
+    model: Type[TModel]
+    response_model: Type[TResponse]
+
+    def __init__(self, session: AsyncSession):
+        if not self.model or not self.response_model:
+            raise ValueError("Not exist model or response model")
+        self.session = session
+
+
+    async def get(self, id) -> TResponse:
+        try:
+            task = await self.session.get_one(self.model, id)
+            return self.response_model.model_validate(task, from_attributes=True)
+        except NoResultFound:
+            raise NotFoundException(self.model.__name__)
+        except SQLAlchemyError as e:
+            logger.error(f"Error with get {self.model.__name__}: {e}")
+            raise
+
+    async def get_list(self, skip, limit):
+        try:
+            query = select(self.model).offset(skip).limit(limit)
+            result = await self.session.scalars(query)
+            tasks = result.all()
+            return tasks
+        except SQLAlchemyError as e:
+            logger.error(f"Error with get_list {self.model.__name__}: {e}")
+            raise
+
+    async def update(self, model_id, model_update):
+        try:
+            async with self.session.begin():
+                update_data = model_update.model_dump(exclude_unset=True)
+                query = update(self.model).where(self.model.id == model_id).values(**update_data).returning(Task)
+                result = await self.session.execute(query)
+                return self.response_model.model_validate(result.scalar_one())
+        except NoResultFound:
+            raise NotFoundException(self.model.__name__)
+        except SQLAlchemyError as e:
+            logger.error(f"Error with update {self.model.__name__} {model_id}: {e}")
+            raise
+
+    async def delete(self, model_id):
+        try:
+            async with self.session.begin():
+                query = delete(self.model).where(self.model.id == model_id).returning(self.model)
+                result = await self.session.execute(query)
+                return self.response_model.model_validate(result.scalar_one())
+        except NoResultFound as e:
+            raise NotFoundException(str(self.model.__name__))
+        except SQLAlchemyError as e:
+            logger.error(f"Error with delete {self.model.__name__} {model_id}: {e}")
+            raise
+
+    async def create(self, model_create):
+        try:
+            new_task_dict = model_create.model_dump(exclude_unset=True)
+            new_task = self.model(**new_task_dict)
+            self.session.add(new_task)
+            await self.session.commit()
+            await self.session.refresh(new_task)
+            return new_task
+        except Exception as e:
+            logger.error(f"Error with create {self.model.__name__}: {e}")
+            await self.session.rollback()
+            raise

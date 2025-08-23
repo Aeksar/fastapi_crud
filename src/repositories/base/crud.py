@@ -1,10 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound, SQLAlchemyError
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import select, update, delete
-from pydantic import BaseModel
-from uuid import UUID
+from redis import Redis
+from datetime import timedelta
 from typing import Type
+import json
 
 from src.repositories.base.abc import BaseCrudRepository, TModel, TResponse
 from src.db import Task
@@ -17,13 +17,25 @@ class CrudRepository(BaseCrudRepository):
     model: Type[TModel]
     response_model: Type[TResponse]
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, redis: Redis):
         if not self.model or not self.response_model:
             raise ValueError("Not exist model or response model")
         self.session = session
+        self.cache = redis
 
 
-    async def get(self, id) -> TResponse:
+    async def get(self, id):
+        key = f"{self.model.__name__}_{id}"
+        cached = await self.cache.get(key)
+        if cached:
+            model = self.response_model.model_validate_json(cached)
+            return model
+        model = await self._get(id)
+        val = model.model_dump_json()
+        await self.cache.set(key, val, timedelta(hours=1))
+        return model
+
+    async def _get(self, id):
         try:
             task = await self.session.get_one(self.model, id)
             return self.response_model.model_validate(task, from_attributes=True)
@@ -63,7 +75,7 @@ class CrudRepository(BaseCrudRepository):
                 result = await self.session.execute(query)
                 return self.response_model.model_validate(result.scalar_one())
         except NoResultFound as e:
-            raise NotFoundException(str(self.model.__name__))
+            raise NotFoundException(self.model.__name__)
         except SQLAlchemyError as e:
             logger.error(f"Error with delete {self.model.__name__} {model_id}: {e}")
             raise

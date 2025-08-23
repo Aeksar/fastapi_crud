@@ -1,18 +1,23 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis import Redis
 from typing import Annotated, Optional
 from uuid import UUID
 
 from src.repositories import BaseTaskRepository, TaskRepository
 from src.api.models.task import TaskCreate, TaskResponse, TaskUpdate
 from src.utils.enums import TaskStatusEnum
+from src.utils.redis import get_redis
 from src.db.core import get_async_session
 
 
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
-def get_task_repo(session: Annotated[AsyncSession, Depends(get_async_session)]) -> TaskRepository:
-    return TaskRepository(session)
+def get_task_repo(
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+        redis: Annotated[Redis, Depends(get_redis)],
+    ) -> TaskRepository:
+    return TaskRepository(session, redis)
 
 
 @task_router.get("/", response_model=list[TaskResponse])

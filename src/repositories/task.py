@@ -1,6 +1,5 @@
 from src.repositories.base.abc import BaseTaskRepository
 from src.repositories.base.crud import CrudRepository
-from src.utils.enums import TaskStatusEnum
 from src.api.models.task import TaskResponse
 from src.db import Task
 

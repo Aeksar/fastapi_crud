@@ -13,6 +13,16 @@ class Settings(BaseSettings):
     TEST_DB_HOST: str
     TEST_DB_NAME: str
     
+    REDIS_PORT: str
+    REDIS_HOST: str
+    REDIS_PASSWORD: str
+    REDIS_USERNAME: str
+    REDIS_DB: str
+
+    @property
+    def REDIS_URL(self):
+        return f"redis://{self.REDIS_USERNAME}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
     @property
     def ASYNC_DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

@@ -22,6 +22,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -39,12 +40,18 @@ jobs:
         pip install -r requirements.txt
     - name: Test with pytest
       env:
-        DB_HOST: localhost
-        DB_PORT: 5432
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_NAME: db
-        TEST_DB_HOST: localhost
-        TEST_DB_NAME: postgres
+        DB_NAME: ${{ secrets.DB_NAME }}
+        TEST_DB_HOST: ${{ secrets.TEST_DB_HOST }}
+        TEST_DB_NAME: ${{ secrets.TEST_DB_NAME }}
+        REDIS_PORT: ${{ secrets.REDIS_PORT }}
+        REDIS_HOST: ${{ secrets.REDIS_HOST }}
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+        REDIS_DB: ${{ secrets.REDIS_DB }}
+        
       run: |
         pytest

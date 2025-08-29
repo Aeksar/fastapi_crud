@@ -26,6 +26,11 @@ class BaseCrudRepository(ABC):
     @abstractmethod
     async def create(self, model_create: BaseModel) -> TResponse: ...
 
+
 class BaseTaskRepository(BaseCrudRepository):
     @abstractmethod
-    async def get_list(self, skip: int, limit: int, status: TaskStatusEnum) -> list[TResponse]: ...
+    async def get_list(self, skip: int, limit: int, status: TaskStatusEnum, user_id: UUID) -> list[TResponse]: ...
+
+
+class BaseUserRepository(BaseCrudRepository):
+    pass

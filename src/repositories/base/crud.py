@@ -4,10 +4,8 @@ from sqlalchemy import select, update, delete
 from redis import Redis
 from datetime import timedelta
 from typing import Type
-import json
 
 from src.repositories.base.abc import BaseCrudRepository, TModel, TResponse
-from src.db import Task
 from src.exc.api import NotFoundException
 from src.settings import logger
 
@@ -45,9 +43,14 @@ class CrudRepository(BaseCrudRepository):
             logger.error(f"Error with get {self.model.__name__}: {e}")
             raise
 
-    async def get_list(self, skip, limit):
+    async def get_list(self, skip, limit, **filters):
         try:
             query = select(self.model).offset(skip).limit(limit)
+
+            for field, value in filters.items():
+                if value is not None and hasattr(self.model, field):
+                    query = query.where(getattr(self.model, field) == value)
+            
             result = await self.session.scalars(query)
             tasks = result.all()
             return tasks
@@ -59,7 +62,7 @@ class CrudRepository(BaseCrudRepository):
         try:
             async with self.session.begin():
                 update_data = model_update.model_dump(exclude_unset=True)
-                query = update(self.model).where(self.model.id == model_id).values(**update_data).returning(Task)
+                query = update(self.model).where(self.model.id == model_id).values(**update_data).returning(self.model)
                 result = await self.session.execute(query)
                 return self.response_model.model_validate(result.scalar_one())
         except NoResultFound:
@@ -82,12 +85,12 @@ class CrudRepository(BaseCrudRepository):
 
     async def create(self, model_create):
         try:
-            new_task_dict = model_create.model_dump(exclude_unset=True)
-            new_task = self.model(**new_task_dict)
-            self.session.add(new_task)
+            new_model_dict = model_create.model_dump(exclude_unset=True)
+            new_model = self.model(**new_model_dict)
+            self.session.add(new_model)
             await self.session.commit()
-            await self.session.refresh(new_task)
-            return new_task
+            await self.session.refresh(new_model)
+            return new_model
         except Exception as e:
             logger.error(f"Error with create {self.model.__name__}: {e}")
             await self.session.rollback()

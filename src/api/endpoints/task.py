@@ -16,7 +16,7 @@ task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 def get_task_repo(
         session: Annotated[AsyncSession, Depends(get_async_session)],
         redis: Annotated[Redis, Depends(get_redis)],
-    ) -> TaskRepository:
+    ) -> BaseTaskRepository:
     return TaskRepository(session, redis)
 
 
@@ -28,7 +28,7 @@ async def get_tasks(
     status: Optional[TaskStatusEnum] = None,
 ):
     """Возвращает лист задач с возможностью пагинации и фильтрации по статусу"""
-    return await repo.get_list(skip, limit, status)
+    return await repo.get_list(skip, limit, status=status)
 
 
 @task_router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)

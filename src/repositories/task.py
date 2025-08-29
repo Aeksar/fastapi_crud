@@ -10,15 +10,3 @@ __all__ = ["TaskRepository", "BaseTaskRepository"]
 class TaskRepository(CrudRepository, BaseTaskRepository):
     model = Task
     response_model = TaskResponse
-
-    async def get_list(self, skip, limit, status):
-        tasks: list[Task] = await super().get_list(skip, limit)
-        response = []
-        if status:
-            for task in tasks:
-                if task.status == status:
-                    response.append(task)
-            return response
-        return tasks
-    
-

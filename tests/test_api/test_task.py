@@ -6,29 +6,21 @@ import json
 from src.settings import GLOBAL_PREFIX
 
 
-
-
-
 class TestTaskAPI:
     """Группа тестов для эндпоинтов /tasks"""
 
     BASE_URL = f"{GLOBAL_PREFIX}/tasks/"
-    task_1 = {"name": "test task", "description": "test task description"}
-
-    @pytest.fixture
-    def test_task(self, test_client: TestClient):
-        response = test_client.post("/api/v1/tasks/", content=json.dumps(self.task_1))
-        yield response.json()
     
-    def test_create_task_success(self, test_client: TestClient):
+    def test_create_task_success(self, test_client: TestClient, test_user: dict):
         """Тест успешного создания задачи."""
-        task_data = {"name": "Test Task 1", "description": "Description for task 1"}
-        response = test_client.post(self.BASE_URL, json=task_data)
+        print(test_user)
+        data = {"name": "Test Task", "description": "some descrip", "owner_id": test_user["id"]}
+        response = test_client.post(self.BASE_URL, json=data)
 
         assert response.status_code == 201
         response_json = response.json()
-        assert response_json["name"] == task_data["name"]
-        assert response_json["description"] == task_data["description"]
+        assert response_json["name"] == data["name"]
+        assert response_json["description"] == data["description"]
         assert "id" in response_json
         assert response_json["status"] == "создано"
 
@@ -59,12 +51,12 @@ class TestTaskAPI:
         assert response.status_code == 200
         assert response.json() == []
 
-    def test_get_tasks_list_and_filter(self, test_client: TestClient):
+    def test_get_tasks_list_and_filter(self, test_client: TestClient, test_user: dict):
         """Тест получения списка задач, пагинации и фильтрации."""
-        test_client.post(self.BASE_URL, json={"name": "Task A"})
-        test_client.post(self.BASE_URL, json={"name": "Task B", "status": "в работе"})
-        test_client.post(self.BASE_URL, json={"name": "Task C", "status": "в работе"})
-        test_client.post(self.BASE_URL, json={"name": "Task D", "status": "завершено"})
+        test_client.post(self.BASE_URL, json={"name": "Task A", "owner_id": test_user["id"]})
+        test_client.post(self.BASE_URL, json={"name": "Task B", "status": "в работе", "owner_id": test_user["id"]})
+        test_client.post(self.BASE_URL, json={"name": "Task C", "status": "в работе", "owner_id": test_user["id"]})
+        test_client.post(self.BASE_URL, json={"name": "Task D", "status": "завершено", "owner_id": test_user["id"]})
 
         response_all =  test_client.get(self.BASE_URL)
         assert response_all.status_code == 200
@@ -87,11 +79,9 @@ class TestTaskAPI:
         assert len(skip_data) == 2
         assert skip_data[0]["name"] == "Task C"
 
-    def test_update_task_success(self, test_client: TestClient):
+    def test_update_task_success(self, test_client: TestClient, test_task: dict):
         """Тест успешного обновления задачи."""
-        create_response =  test_client.post(self.BASE_URL, json={"name": "Original Name"})
-        created_task = create_response.json()
-        task_id = created_task["id"]
+        task_id = test_task["id"]
 
         update_data = {"name": "Updated Name", "status": "завершено"}
         update_response =  test_client.put(f"{self.BASE_URL}{task_id}", json=update_data)
@@ -109,10 +99,9 @@ class TestTaskAPI:
         response = test_client.put(f"{self.BASE_URL}{random_uuid}", json=update_data)
         assert response.status_code == 404
 
-    def test_delete_task_success(self, test_client: TestClient):
+    def test_delete_task_success(self, test_client: TestClient, test_task: dict):
         """Тест успешного удаления задачи."""
-        create_response = test_client.post(self.BASE_URL, json={"name": "To be deleted"})
-        task_id = create_response.json()["id"]
+        task_id = test_task["id"]
 
         delete_response = test_client.delete(f"{self.BASE_URL}{task_id}")
         assert delete_response.status_code == 200

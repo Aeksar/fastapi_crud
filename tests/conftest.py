@@ -3,12 +3,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy import create_engine
 from redis.asyncio.client import Redis
 from unittest.mock import AsyncMock
+import pytest_asyncio
 import pytest
 import json
 
 from src.db import Base
 from src.api.endpoints.task import get_async_session, get_redis
+from src.repositories import UserRepository, TaskRepository
 from src.settings.environment import settings
+from src.settings import GLOBAL_PREFIX
 from main import app
 
 
@@ -52,4 +55,21 @@ def test_client():
         yield c
 
 
+
+@pytest_asyncio.fixture
+async def test_user(test_client: TestClient):
+    data = {
+        "name": "User",
+        "surname": "Test",
+        "email": "user@example.com",
+        "birthdate": "2025-08-08",
+        "password": "12345678Qw."
+    }
+    yield test_client.post(f"{GLOBAL_PREFIX}/users", json=data).json()
+
+
+@pytest.fixture
+def test_task(test_client: TestClient, test_user: dict):
+    data = {"name": "test task", "description": "test task description", "owner_id": test_user["id"]}
+    yield test_client.post(f"{GLOBAL_PREFIX}/tasks", content=json.dumps(data)).json()
 

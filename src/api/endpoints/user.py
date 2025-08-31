@@ -27,7 +27,7 @@ def get_user_service(
     return UserService(repo, hasher)
 
 
-@user_router.post("/")
+@user_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: UserCreate,
     service: UserService = Depends(get_user_service),

@@ -13,7 +13,6 @@ class TestTaskAPI:
     
     def test_create_task_success(self, test_client: TestClient, test_user: dict):
         """Тест успешного создания задачи."""
-        print(test_user)
         data = {"name": "Test Task", "description": "some descrip", "owner_id": test_user["id"]}
         response = test_client.post(self.BASE_URL, json=data)
 
@@ -39,7 +38,7 @@ class TestTaskAPI:
 
     def test_get_task_success(self, test_client: TestClient, test_task: dict):
         """Тест успешного получения одной задачи."""
-        get_response =  test_client.get(f"{self.BASE_URL}{test_task["id"]}")
+        get_response = test_client.get(f"{self.BASE_URL}{test_task["id"]}")
         assert get_response.status_code == 200
         get_task_json = get_response.json()
         assert get_task_json["id"] == test_task["id"]
@@ -47,7 +46,7 @@ class TestTaskAPI:
 
     def test_get_tasks_empty_list(self, test_client: TestClient):
         """Тест получения пустого списка задач."""
-        response =  test_client.get(self.BASE_URL)
+        response = test_client.get(self.BASE_URL)
         assert response.status_code == 200
         assert response.json() == []
 

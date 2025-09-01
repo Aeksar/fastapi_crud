@@ -52,8 +52,8 @@ class CrudRepository(BaseCrudRepository):
                     query = query.where(getattr(self.model, field) == value)
             
             result = await self.session.scalars(query)
-            tasks = result.all()
-            return tasks
+            return result.all()
+             
         except SQLAlchemyError as e:
             logger.error(f"Error with get_list {self.model.__name__}: {e}")
             raise

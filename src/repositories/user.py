@@ -1,10 +1,12 @@
 from sqlalchemy import select
 from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from src.repositories.base.abc import BaseUserRepository
 from src.repositories.base.crud import CrudRepository
 from src.api.models.user import UserResponse, UserCreate, UserCreateToDatabase
-from src.utils.security import Hasher
+from src.auth.create import create_access_token
+from src.auth.hash import Hasher
 from src.db import User
 
 
@@ -25,6 +27,12 @@ class UserRepository(CrudRepository, BaseUserRepository):
                 detail="Пользователь с таким email уже существует"
             )
         return await super().create(model_create)
+    
+    async def get_by_username(self, username):
+        query = select(self.model).where(self.model.name == username)
+        result = await self.session.execute(query)
+        return self.response_model.model_validate(result.scalar_one())
+
   
 
 class UserService:
@@ -39,3 +47,11 @@ class UserService:
         model_dict.update({"hashed_password": hashed_password})
         model = UserCreateToDatabase(**model_dict)
         return await self.repo.create(model)
+    
+    async def authenticate(self, form_data: OAuth2PasswordRequestForm):
+        user: UserResponse = await self.repo.get_by_username(form_data.username)
+        if not user:
+            return
+        if not self.hasher.verify(form_data.password, user.hashed_password):
+            return
+        return create_access_token(user)

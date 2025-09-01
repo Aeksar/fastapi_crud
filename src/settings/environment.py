@@ -1,10 +1,22 @@
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
-
+from pydantic import ConfigDict, BaseModel
+from pathlib import Path
 
 GLOBAL_PREFIX = "/api/v1"
+BASE_DIR = Path(__file__).parent.parent.parent
+print(BASE_DIR)
+
+class AuthJWT(BaseModel):
+    public_key: Path = BASE_DIR / "certs" / "public.pem"
+    private_key: Path = BASE_DIR / "certs" / "private.pem"
+    algorithm: str = "RS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_minutes: int = 30 * 24 * 60
 
 class Settings(BaseSettings):
+
+    auth: AuthJWT = AuthJWT()
+
     DB_HOST: str
     DB_PORT: str
     DB_USER: str

@@ -5,9 +5,8 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from src.repositories import BaseUserRepository, UserRepository, UserService
-from src.api.models.user import UserCreate, UserResponse, UserUpdate
-from src.utils.security import get_hasher, Hasher
-from src.utils.enums import UserRoleEnum
+from src.api.models.user import UserCreate, UserUpdate
+from src.auth.hash import get_hasher, Hasher
 from src.utils.redis import get_redis
 from src.db.core import get_async_session
 

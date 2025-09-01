@@ -10,3 +10,6 @@ class UserRoleEnum(str, Enum):
     REDACTOR = "Редактор"
     ADMIN = "Администратор"
     
+class TokenType(str, Enum):
+    ACCESS = "access"
+    REFRESH = "refresh"

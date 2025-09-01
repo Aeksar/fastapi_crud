@@ -15,7 +15,7 @@ class BaseCrudRepository(ABC):
     async def get(self, id: UUID) -> TResponse: ...
     
     @abstractmethod
-    async def get_list(self, skip: int, limit: int) -> list[TResponse]: ...
+    async def get_list(self, skip: int, limit: int, **kwargs) -> list[TResponse]: ...
 
     @abstractmethod
     async def update(self, model_id: UUID, model_update: BaseModel) -> TResponse: ...
@@ -33,4 +33,6 @@ class BaseTaskRepository(BaseCrudRepository):
 
 
 class BaseUserRepository(BaseCrudRepository):
-    pass
+    
+    @abstractmethod
+    async def get_by_username(self, username: str) -> TResponse: ...

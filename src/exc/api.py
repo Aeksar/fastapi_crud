@@ -12,3 +12,7 @@ class NotFoundException(HTTPException):
 class InternalServerException(HTTPException):
     def __init__(self, detail = None, headers = None):
         super().__init__(status.HTTP_500_INTERNAL_SERVER_ERROR, detail, headers)
+
+class UnautorizedException(HTTPException):
+    def __init__(self, detail = "Couldn't validate data", headers = {"WWW-Authenticate": "Bearer"}):
+        super().__init__(status.HTTP_401_UNAUTHORIZED, detail, headers)

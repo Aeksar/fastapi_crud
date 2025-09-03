@@ -1,12 +1,19 @@
 from sqlalchemy import select
-from fastapi import HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import HTTPException, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
+import jwt
 
 from src.repositories.base.abc import BaseUserRepository
 from src.repositories.base.crud import CrudRepository
 from src.api.models.user import UserResponse, UserCreate, UserCreateToDatabase
 from src.auth.create import create_access_token
-from src.auth.hash import Hasher
+from src.auth.token import decode_jwt
+from src.auth.hash import Hasher, get_hasher
+from src.utils.redis import Redis, get_redis
+from src.db.core import get_async_session
+from src.exc.api import InvalidTokenException, UnautorizedException
+from src.utils.enums import TokenType
 from src.db import User
 
 
@@ -48,10 +55,35 @@ class UserService:
         model = UserCreateToDatabase(**model_dict)
         return await self.repo.create(model)
     
-    async def authenticate(self, form_data: OAuth2PasswordRequestForm):
-        user: UserResponse = await self.repo.get_by_username(form_data.username)
+    async def authenticate(self, username: str, password: str):
+        user: UserResponse = await self.repo.get_by_username(username)
         if not user:
-            return
-        if not self.hasher.verify(form_data.password, user.hashed_password):
-            return
-        return create_access_token(user)
+            raise UnautorizedException()
+        if not self.hasher.verify(password, user.hashed_password):
+            raise UnautorizedException()
+        return user
+    
+    async def get_current_user(self, token: str | bytes):
+        try:
+            payload = decode_jwt(token)
+            if not payload.get("type") == TokenType.ACCESS:
+                raise InvalidTokenException
+            
+            user_id = payload.get("sub")
+            return await self.repo.get(user_id)
+        except jwt.exceptions.InvalidTokenError:
+            raise InvalidTokenException
+    
+
+
+def get_user_repo(
+        session: Annotated[AsyncSession, Depends(get_async_session)],
+        redis: Annotated[Redis, Depends(get_redis)],
+    ) -> BaseUserRepository:
+    return UserRepository(session, redis)
+
+def get_user_service(
+        repo: Annotated[BaseUserRepository, Depends(get_user_repo)],
+        hasher: Annotated[Hasher, Depends(get_hasher)]
+):
+    return UserService(repo, hasher)

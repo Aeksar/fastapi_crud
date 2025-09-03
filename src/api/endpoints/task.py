@@ -4,21 +4,27 @@ from redis import Redis
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories import BaseTaskRepository, TaskRepository
+from src.repositories import BaseTaskRepository, TaskRepository, UserService
+from src.repositories.user import get_user_repo
+from src.repositories.task import get_task_repo
 from src.api.models.task import TaskCreate, TaskResponse, TaskUpdate
+from src.api.models.user import UserResponse
 from src.utils.enums import TaskStatusEnum
 from src.utils.redis import get_redis
 from src.db.core import get_async_session
+from src.auth.validations import get_current_user
 
 
 task_router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
-def get_task_repo(
-        session: Annotated[AsyncSession, Depends(get_async_session)],
-        redis: Annotated[Redis, Depends(get_redis)],
-    ) -> BaseTaskRepository:
-    return TaskRepository(session, redis)
 
+@task_router.get("/my")
+async def owner_tasks(
+    user: UserResponse = Depends(get_current_user),
+    repo: TaskRepository = Depends(get_task_repo)
+):
+    """Возвращаетс список задач авторизованного пользователя"""
+    return await repo.get_list(owner_id=user.id)
 
 @task_router.get("/", response_model=list[TaskResponse])
 async def get_tasks(
@@ -66,3 +72,5 @@ async def delete_task(
 ):
     """Удаляет задачу"""
     return await repo.delete(task_id)
+
+

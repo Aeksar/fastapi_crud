@@ -43,7 +43,7 @@ class CrudRepository(BaseCrudRepository):
             logger.error(f"Error with get {self.model.__name__}: {e}")
             raise
 
-    async def get_list(self, skip, limit, **filters):
+    async def get_list(self, skip=0, limit=50, **filters):
         try:
             query = select(self.model).offset(skip).limit(limit)
 

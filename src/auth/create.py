@@ -27,3 +27,11 @@ def create_access_token(user: UserResponse):
         token_data=data
     )
 
+def create_refresh_token(user: UserResponse):
+    data = {"sub": str(user.id)}
+    return create_jwt(
+        token_type=TokenType.REFRESH,
+        token_data=data,
+        expire_minutes=settings.auth.refresh_token_expire_minutes
+    )
+

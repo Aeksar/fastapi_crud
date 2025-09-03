@@ -4,26 +4,17 @@ from redis import Redis
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories import BaseUserRepository, UserRepository, UserService
-from src.api.models.user import UserCreate, UserUpdate
+from src.repositories import TaskRepository, UserRepository, UserService
+from src.repositories.task import get_task_repo
+from src.api.models.user import UserCreate, UserUpdate, UserResponse
 from src.auth.hash import get_hasher, Hasher
 from src.utils.redis import get_redis
 from src.db.core import get_async_session
+from src.repositories.user import get_user_repo, get_user_service
+from src.auth.validations import get_current_user
 
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
-
-def get_user_repo(
-        session: Annotated[AsyncSession, Depends(get_async_session)],
-        redis: Annotated[Redis, Depends(get_redis)],
-    ) -> BaseUserRepository:
-    return UserRepository(session, redis)
-
-def get_user_service(
-        repo: Annotated[BaseUserRepository, Depends(get_user_repo)],
-        hasher: Annotated[Hasher, Depends(get_hasher)]
-):
-    return UserService(repo, hasher)
 
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
@@ -66,4 +57,6 @@ async def delete_user(
     repo: UserRepository = Depends(get_user_repo),
 ):
     return await repo.delete(user_id)
+
+
     

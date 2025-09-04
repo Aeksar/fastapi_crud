@@ -4,7 +4,7 @@ from pathlib import Path
 
 GLOBAL_PREFIX = "/api/v1"
 BASE_DIR = Path(__file__).parent.parent.parent
-print(BASE_DIR)
+
 
 class AuthJWT(BaseModel):
     public_key: Path = BASE_DIR / "certs" / "public.pem"
@@ -12,6 +12,12 @@ class AuthJWT(BaseModel):
     algorithm: str = "RS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_minutes: int = 30 * 24 * 60
+
+    def load_private(self) -> str:
+        return self.private_key.read_text()
+
+    def load_public(self) -> str:
+        return self.public_key.read_text()
 
 class Settings(BaseSettings):
 

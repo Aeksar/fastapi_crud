@@ -1,16 +1,20 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import create_engine
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from redis.asyncio.client import Redis
 from unittest.mock import AsyncMock
+from pathlib import Path
+import shutil
 import pytest_asyncio
 import pytest
 import json
+import os
 
 from src.db import Base
 from src.api.endpoints.task import get_async_session, get_redis
-from src.repositories import UserRepository, TaskRepository
-from src.settings.environment import settings
+from src.settings.environment import settings, GLOBAL_PREFIX
 from src.settings import GLOBAL_PREFIX
 from main import app
 
@@ -73,3 +77,37 @@ def test_task(test_client: TestClient, test_user: dict):
     data = {"name": "test task", "description": "test task description", "owner_id": test_user["id"]}
     yield test_client.post(f"{GLOBAL_PREFIX}/tasks", content=json.dumps(data)).json()
 
+
+@pytest.fixture(autouse=True)
+def fake_certs(tmp_path: Path, monkeypatch):
+    certs_dir = tmp_path / "certs"
+    certs_dir.mkdir(exist_ok=True)
+
+    private_path =  tmp_path / "certs" / "private.pem"
+    public_path =  tmp_path / "certs" / "public.pem"
+
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+
+    public_pem = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    
+    private_path.write_bytes(private_pem)
+    public_path.write_bytes(public_pem)
+
+    monkeypatch.setattr(settings.auth, "public_key", public_path)
+    monkeypatch.setattr(settings.auth, "private_key", private_path)
+    
+    yield
+
+    shutil.rmtree(certs_dir, ignore_errors=True)

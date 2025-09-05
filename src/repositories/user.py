@@ -7,7 +7,6 @@ import jwt
 from src.repositories.base.abc import BaseUserRepository
 from src.repositories.base.crud import CrudRepository
 from src.api.models.user import UserResponse, UserCreate, UserCreateToDatabase
-from src.auth.create import create_access_token
 from src.auth.token import decode_jwt
 from src.auth.hash import Hasher, get_hasher
 from src.utils.redis import Redis, get_redis
@@ -26,12 +25,13 @@ class UserRepository(CrudRepository, BaseUserRepository):
 
     async def create(self, model_create):
         existing_user = await self.session.scalar(
-            select(self.model).where(self.model.email == model_create.email)
+            select(self.model).where(
+                (self.model.email == model_create.email) | (self.model.name == model_create.name))
         )
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Пользователь с таким email уже существует"
+                detail="Пользователь с таким email или именем уже существует"
             )
         return await super().create(model_create)
     
@@ -47,7 +47,7 @@ class UserService:
         self.hasher = hasher
         self.repo = user_repo
 
-    async def registration(self, model_create: UserCreate):
+    async def registration(self, model_create: UserCreate) -> UserResponse:
         model_dict = model_create.model_dump(exclude_unset=True)
         password = model_dict.pop("password")
         hashed_password = self.hasher.hash(password)

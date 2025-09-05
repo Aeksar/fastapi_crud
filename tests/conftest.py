@@ -33,10 +33,10 @@ async def override_get_db():
 async def override_get_redis():
     redis_mock = AsyncMock(spec=Redis)
 
-    async def mock_get(key, *args, **kwargs):
+    async def mock_get(*args, **kwargs):
         return None
     
-    async def mock_set(key, value, ex, *args, **kwargs):
+    async def mock_set(*args, **kwargs):
         pass
 
     redis_mock.get.side_effect = mock_get

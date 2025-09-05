@@ -13,3 +13,4 @@ class UserRoleEnum(str, Enum):
 class TokenType(str, Enum):
     ACCESS = "access"
     REFRESH = "refresh"
+    VERIFICATION = "verification"

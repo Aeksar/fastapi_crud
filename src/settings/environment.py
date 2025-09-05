@@ -5,7 +5,6 @@ from pathlib import Path
 GLOBAL_PREFIX = "/api/v1"
 BASE_DIR = Path(__file__).parent.parent.parent
 
-
 class AuthJWT(BaseModel):
     public_key: Path = BASE_DIR / "certs" / "public.pem"
     private_key: Path = BASE_DIR / "certs" / "private.pem"
@@ -18,9 +17,14 @@ class AuthJWT(BaseModel):
 
     def load_public(self) -> str:
         return self.public_key.read_text()
+    
+class Mail(BaseModel):
+    admin_adress: str = "admin@example.com"
+    port: int = 1025
+    host: str = "127.0.0.1"
 
 class Settings(BaseSettings):
-
+    mail: Mail = Mail()
     auth: AuthJWT = AuthJWT()
 
     DB_HOST: str

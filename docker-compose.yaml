@@ -35,7 +35,18 @@ services:
       timeout: 5s
       retries: 5
 
-
+  maildev:
+    image: maildev/maildev:2.2.1
+    restart: always
+    environment:
+      - TZ=Europe/Moscow
+    ports:
+      - "8080:1080"
+      - "1025:1025"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
     
   api:
     build: .

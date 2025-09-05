@@ -4,15 +4,11 @@ from redis import Redis
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories import TaskRepository, UserRepository, UserService
-from src.repositories.task import get_task_repo
+from src.repositories import UserRepository, UserService
 from src.api.models.user import UserCreate, UserUpdate, UserResponse
-from src.auth.hash import get_hasher, Hasher
-from src.utils.redis import get_redis
-from src.db.core import get_async_session
+from src.mailing.verification import send_verification_code
 from src.repositories.user import get_user_repo, get_user_service
-from src.auth.validations import get_current_user
-
+from src.utils.redis import Redis, get_redis
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -21,8 +17,11 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 async def create_user(
     user: UserCreate,
     service: UserService = Depends(get_user_service),
+    redis: Redis = Depends(get_redis)
 ):
-    return await service.registration(user)
+    user = await service.registration(user)
+    await send_verification_code(user.email, redis)
+    return user
 
 
 @user_router.get("/")

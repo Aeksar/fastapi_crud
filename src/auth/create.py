@@ -1,4 +1,4 @@
-from datetime import timedelta
+import secrets
 
 from src.utils.enums import TokenType
 from src.api.models.user import UserResponse
@@ -35,3 +35,7 @@ def create_refresh_token(user: UserResponse):
         expire_minutes=settings.auth.refresh_token_expire_minutes
     )
 
+
+
+def create_code(length: int = 6) -> str:
+    return "".join(secrets.choice("0123456789") for _ in range(length))

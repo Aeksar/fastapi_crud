@@ -28,6 +28,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      maildev:
+        image: maildev/maildev:2.2.1
+        ports:
+          - "8080:1080"
+          - "1025:1025"
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12

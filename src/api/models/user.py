@@ -39,6 +39,8 @@ class UserUpdate(BaseUserModel):
     email: Optional[EmailStr] = Field(default=None)
     password: Optional[str] = Field(default=None)
     birthdate: Optional[PastDate] = Field(default=None)
+    is_active: Optional[bool] = Field(default=None)
+    is_verified: Optional[bool] = Field(default=None)
     role: Optional[UserRoleEnum] = Field(default=None)
 
     @field_validator('password')

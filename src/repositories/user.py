@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from fastapi import HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
@@ -31,7 +31,7 @@ class UserRepository(CrudRepository, BaseUserRepository):
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Пользователь с таким email или именем уже существует"
+                detail="Пользователь с такой почтой или именем уже существует"
             )
         return await super().create(model_create)
     
@@ -39,7 +39,6 @@ class UserRepository(CrudRepository, BaseUserRepository):
         query = select(self.model).where(self.model.name == username)
         result = await self.session.execute(query)
         return self.response_model.model_validate(result.scalar_one())
-
   
 
 class UserService:
@@ -63,17 +62,25 @@ class UserService:
             raise UnautorizedException()
         return user
     
+    
+    async def get_current_user_from_verify(self, token: str):
+        return await self._get_user_from_token(token, TokenType.VERIFICATION)
+
+
     async def get_current_user(self, token: str | bytes):
+        return await self._get_user_from_token(token, TokenType.ACCESS)
+
+    
+    async def _get_user_from_token(self, token: str | bytes, token_type: TokenType) -> User:
         try:
             payload = decode_jwt(token)
-            if not (payload.get("type") == TokenType.ACCESS or payload.get("type") == TokenType.VERIFICATION):
+            if not payload.get("type") == token_type:
                 raise InvalidTokenException
             
             user_id = payload.get("sub")
             return await self.repo.get(user_id)
         except jwt.exceptions.InvalidTokenError:
             raise InvalidTokenException
-    
 
 
 def get_user_repo(

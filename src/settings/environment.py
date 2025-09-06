@@ -10,6 +10,7 @@ class AuthJWT(BaseModel):
     private_key: Path = BASE_DIR / "certs" / "private.pem"
     algorithm: str = "RS256"
     access_token_expire_minutes: int = 15
+    verification_token_expire_minutes: int = 5
     refresh_token_expire_minutes: int = 30 * 24 * 60
 
     def load_private(self) -> str:

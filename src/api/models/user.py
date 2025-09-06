@@ -56,6 +56,7 @@ class UserResponse(BaseUserModel):
     id: UUID
     hashed_password: str
     is_active: bool
+    is_verified: bool
     role: UserRoleEnum
 
     model_config = ConfigDict(from_attributes=True)

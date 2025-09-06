@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta, timezone
+from fastapi import Response
 import uuid
 import jwt
 
 from src.settings import settings
 
+
+ACCESS_TOKEN_NAME = "access_token"
+REFRESH_TOKEN_NAME = "refresh_token"
+VERIFICATION_TOKEN_NAME = "verificatation_token"
 
 def encode_jwt(
     payload: dict,
@@ -38,3 +43,34 @@ def decode_jwt(
         public_key,
         algorithms=[algorithm]
     )
+
+def set_tokens_to_cookie(
+        response: Response,
+        access_token: str | None=None,
+        refresh_token: str | None=None,
+        verification_token: str | None=None
+):
+    if access_token:
+        response.set_cookie(
+            ACCESS_TOKEN_NAME,
+            access_token,
+            max_age=settings.auth.access_token_expire_minutes,
+            httponly=True,
+            secure=True
+        )
+    if refresh_token:
+        response.set_cookie(
+            REFRESH_TOKEN_NAME,
+            refresh_token,
+            max_age=settings.auth.refresh_token_expire_minutes,
+            httponly=True,
+            secure=True
+        )
+    if verification_token:
+        response.set_cookie(
+            VERIFICATION_TOKEN_NAME,
+            verification_token,
+            max_age=settings.auth.verification_token_expire_minutes,
+            httponly=True,
+            secure=True
+        )

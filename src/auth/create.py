@@ -35,7 +35,13 @@ def create_refresh_token(user: UserResponse):
         expire_minutes=settings.auth.refresh_token_expire_minutes
     )
 
-
+def create_verification_token(user: UserResponse):
+    data = {"sub": str(user.id)}
+    return create_jwt(
+        token_type=TokenType.VERIFICATION,
+        token_data=data,
+        expire_minutes=settings.auth.verification_token_expire_minutes
+    )
 
 def create_code(length: int = 6) -> str:
     return "".join(secrets.choice("0123456789") for _ in range(length))

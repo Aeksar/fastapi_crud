@@ -66,7 +66,7 @@ class UserService:
     async def get_current_user(self, token: str | bytes):
         try:
             payload = decode_jwt(token)
-            if not payload.get("type") == TokenType.ACCESS:
+            if not (payload.get("type") == TokenType.ACCESS or payload.get("type") == TokenType.VERIFICATION):
                 raise InvalidTokenException
             
             user_id = payload.get("sub")

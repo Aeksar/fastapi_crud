@@ -32,6 +32,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     birthdate: Mapped[date] = mapped_column(Date(), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean(), default=False)
     role: Mapped[Enum] = mapped_column(Enum(UserRoleEnum), default=UserRoleEnum.USER, nullable=False)
 
     tasks = relationship("Task", back_populates="owner")

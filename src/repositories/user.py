@@ -1,4 +1,5 @@
 from sqlalchemy import select, update
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
@@ -36,10 +37,12 @@ class UserRepository(CrudRepository, BaseUserRepository):
         return await super().create(model_create)
     
     async def get_by_username(self, username):
-        query = select(self.model).where(self.model.name == username)
-        result = await self.session.execute(query)
-        return self.response_model.model_validate(result.scalar_one())
-  
+        try:
+            query = select(self.model).where(self.model.name == username)
+            result = await self.session.execute(query)
+            return self.response_model.model_validate(result.scalar_one())
+        except SQLAlchemyError:
+            return None
 
 class UserService:
     def __init__(self, user_repo: BaseUserRepository, hasher: Hasher):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, Request, HTTPException, status, Header
+from fastapi import APIRouter, Depends, Response, Request, HTTPException, status, Header, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.repositories.user import UserService, get_user_service, get_user_repo, BaseUserRepository
@@ -46,14 +46,15 @@ async def login(
     response_model=TokenInfo,
 )
 async def refresh_access_token(
-    request: Request,
+    response: Response,
+    refresh_token: str = Cookie(alias=REFRESH_TOKEN_NAME),
     repo: BaseUserRepository = Depends(get_user_repo)
 ):
-    refresh_token = request.cookies.get(REFRESH_TOKEN_NAME)
     payload = decode_jwt(refresh_token)
     user_id = payload.get("sub")
     user = await repo.get(user_id)
     token = create_access_token(user)
+    set_tokens_to_cookie(response, access_token=token)
     return TokenInfo(access_token=token)
 
 

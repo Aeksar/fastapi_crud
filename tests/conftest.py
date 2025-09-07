@@ -3,9 +3,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy import create_engine
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from redis.asyncio.client import Redis
-from unittest.mock import AsyncMock
 from pathlib import Path
+import requests
 import shutil
 import pytest_asyncio
 import pytest
@@ -14,8 +13,7 @@ import os
 
 from src.db import Base
 from src.api.endpoints.task import get_async_session, get_redis
-from src.settings.environment import settings, GLOBAL_PREFIX
-from src.settings import GLOBAL_PREFIX
+from src.settings.environment import settings, GLOBAL_PREFIX, BASE_DIR
 from main import app
 
 
@@ -30,18 +28,22 @@ async def override_get_db():
         yield session
 
 
+REDIS_DATA = {}
 async def override_get_redis():
-    redis_mock = AsyncMock(spec=Redis)
+    class MockRedis():
+        def __init__(self):
+            self.storage = REDIS_DATA
 
-    async def mock_get(*args, **kwargs):
-        return None
-    
-    async def mock_set(*args, **kwargs):
-        pass
+        async def get(self, key, *args, **kwargs):
+            return self.storage.get(key)
+        
+        async def set(self, key, val, *args, **kwargs):
+            self.storage[key] = val
 
-    redis_mock.get.side_effect = mock_get
-    redis_mock.set.side_effect = mock_set
-    yield redis_mock
+        async def delete(self, key, *args, **kwargs):
+            self.storage.pop(key)
+
+    yield MockRedis()
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -59,6 +61,19 @@ def test_client():
         yield c
 
 
+@pytest.fixture()
+def auth_client(test_user):
+    data = {
+            "username": "User",
+            "password": "12345678Qw.",
+        }
+    response = requests.post(f"http://localhost:8000/{GLOBAL_PREFIX}/auth/login", data=data)
+    cookies = dict(response.cookies)
+    app.dependency_overrides[get_async_session] = override_get_db
+    app.dependency_overrides[get_redis] = override_get_redis
+    with TestClient(app, cookies=cookies) as c:
+        yield c
+
 
 @pytest_asyncio.fixture
 async def test_user(test_client: TestClient):
@@ -69,7 +84,7 @@ async def test_user(test_client: TestClient):
         "birthdate": "2025-08-08",
         "password": "12345678Qw."
     }
-    yield test_client.post(f"{GLOBAL_PREFIX}/users", json=data).json()
+    yield test_client.post(f"{GLOBAL_PREFIX}/users/", json=data).json()
 
 
 @pytest.fixture
@@ -79,12 +94,12 @@ def test_task(test_client: TestClient, test_user: dict):
 
 
 @pytest.fixture(autouse=True)
-def fake_certs(tmp_path: Path, monkeypatch):
-    certs_dir = tmp_path / "certs"
+def fake_certs(monkeypatch):
+    certs_dir = BASE_DIR / "certs"
     certs_dir.mkdir(exist_ok=True)
 
-    private_path =  tmp_path / "certs" / "private.pem"
-    public_path =  tmp_path / "certs" / "public.pem"
+    private_path =  BASE_DIR / "certs" / "private.pem"
+    public_path =  BASE_DIR / "certs" / "public.pem"
 
     private_key = rsa.generate_private_key(
         public_exponent=65537,

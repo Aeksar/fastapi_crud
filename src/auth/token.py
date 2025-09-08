@@ -4,11 +4,9 @@ import uuid
 import jwt
 
 from src.settings import settings
+from src.utils.enums import TokenName
 
 
-ACCESS_TOKEN_NAME = "access_token"
-REFRESH_TOKEN_NAME = "refresh_token"
-VERIFICATION_TOKEN_NAME = "verificatation_token"
 
 def encode_jwt(
     payload: dict,
@@ -52,7 +50,7 @@ def set_tokens_to_cookie(
 ):
     if access_token:
         response.set_cookie(
-            ACCESS_TOKEN_NAME,
+            TokenName.ACCESS_TOKEN.value,
             access_token,
             max_age=settings.auth.access_token_expire_minutes,
             httponly=True,
@@ -60,7 +58,7 @@ def set_tokens_to_cookie(
         )
     if refresh_token:
         response.set_cookie(
-            REFRESH_TOKEN_NAME,
+            TokenName.REFRESH_TOKEN.value,
             refresh_token,
             max_age=settings.auth.refresh_token_expire_minutes,
             httponly=True,
@@ -68,7 +66,7 @@ def set_tokens_to_cookie(
         )
     if verification_token:
         response.set_cookie(
-            VERIFICATION_TOKEN_NAME,
+            TokenName.VERIFICATION_TOKEN.value,
             verification_token,
             max_age=settings.auth.verification_token_expire_minutes,
             httponly=True,

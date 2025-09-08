@@ -4,11 +4,11 @@ import pytest
 import json
 
 from src.settings import GLOBAL_PREFIX
-from src.auth.token import ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, VERIFICATION_TOKEN_NAME
+from src.utils.enums import TokenName
 from tests.conftest import override_get_redis
 
 
-class TestAuth:
+class TestAuthAPI:
     """Группа тестов для эндпоинтов /auth"""
 
     BASE_URL = f"{GLOBAL_PREFIX}/auth"
@@ -21,8 +21,8 @@ class TestAuth:
         response = test_client.post(f"{self.BASE_URL}/login", data=self.CREDENTIALS)
         content = response.json()
         assert response.status_code == 200
-        assert ACCESS_TOKEN_NAME in content
-        assert REFRESH_TOKEN_NAME in content
+        assert TokenName.ACCESS_TOKEN in content
+        assert TokenName.REFRESH_TOKEN in content
 
 
     def test_invalid_autorize_data(self, test_client: TestClient):
@@ -35,15 +35,11 @@ class TestAuth:
         assert response.status_code == 401
         assert "www-authenticate" in response.headers
 
-    def test_refresh_token(self, test_client: TestClient, test_user):
-        response = test_client.post(f"{self.BASE_URL}/login", data=self.CREDENTIALS)
-        cookies = dict(response.cookies)
+    def test_refresh_token(self, auth_client: TestClient, test_user):
+        response = auth_client.post(f"{self.BASE_URL}/refresh")
         assert response.status_code == 200
-        second_response = test_client.post(f"{self.BASE_URL}/refresh", cookies=cookies)
-        print(second_response.json())
-        assert second_response.status_code == 200
-        assert ACCESS_TOKEN_NAME in second_response.json()
-        assert ACCESS_TOKEN_NAME in second_response.cookies
+        assert TokenName.ACCESS_TOKEN in response.json()
+        assert TokenName.ACCESS_TOKEN in response.cookies
 
     
     async def test_2fa(self, test_client: TestClient, test_user):
@@ -55,13 +51,13 @@ class TestAuth:
         assert login_response.status_code == 200
         redis = await anext(override_get_redis())
         code = await redis.get(f"2fa:{test_user["email"]}")
-        print(code, "GERE")
-        response = test_client.post(f"{self.BASE_URL}/2fa", json={"code": code}, headers={"Authenticate": login_response.cookies.get(VERIFICATION_TOKEN_NAME)})
-        print(response.json())
+        print(login_response.cookies, "ASDASD")
+        print("ASDASDASD")
+        response = test_client.post(f"{self.BASE_URL}/2fa", json={"code": code}, headers={"Authenticate": login_response.cookies.get(TokenName.VERIFICATION_TOKEN.value)})
         assert response.status_code == 200
         content = response.json()
-        assert ACCESS_TOKEN_NAME in content
-        assert REFRESH_TOKEN_NAME in content
+        assert TokenName.ACCESS_TOKEN in content
+        assert TokenName.REFRESH_TOKEN in content
 
 
 

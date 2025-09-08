@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from redis import Redis
 from typing import Annotated, Optional
 from uuid import UUID
 
-from src.repositories import BaseTaskRepository, TaskRepository, UserService
+from src.repositories import BaseTaskRepository, TaskRepository
 from src.repositories.user import get_user_repo
 from src.repositories.task import get_task_repo
 from src.api.models.task import TaskCreate, TaskResponse, TaskUpdate

@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
-import requests
 import shutil
 import pytest_asyncio
 import pytest
@@ -62,12 +61,12 @@ def test_client():
 
 
 @pytest.fixture()
-def auth_client(test_user):
+def auth_client(test_user, test_client: TestClient):
     data = {
             "username": "User",
             "password": "12345678Qw.",
         }
-    response = requests.post(f"http://localhost:8000/{GLOBAL_PREFIX}/auth/login", data=data)
+    response = test_client.post(f"{GLOBAL_PREFIX}/auth/login", data=data)
     cookies = dict(response.cookies)
     app.dependency_overrides[get_async_session] = override_get_db
     app.dependency_overrides[get_redis] = override_get_redis
@@ -93,8 +92,8 @@ def test_task(test_client: TestClient, test_user: dict):
     yield test_client.post(f"{GLOBAL_PREFIX}/tasks", content=json.dumps(data)).json()
 
 
-@pytest.fixture(autouse=True)
-def fake_certs(monkeypatch):
+@pytest.fixture(autouse=True, scope="session")
+def fake_certs():
     certs_dir = BASE_DIR / "certs"
     certs_dir.mkdir(exist_ok=True)
 
@@ -120,8 +119,8 @@ def fake_certs(monkeypatch):
     private_path.write_bytes(private_pem)
     public_path.write_bytes(public_pem)
 
-    monkeypatch.setattr(settings.auth, "public_key", public_path)
-    monkeypatch.setattr(settings.auth, "private_key", private_path)
+    # monkeypatch.setattr(settings.auth, "public_key", public_path)
+    # monkeypatch.setattr(settings.auth, "private_key", private_path)
     
     yield
 

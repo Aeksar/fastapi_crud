@@ -14,3 +14,8 @@ class TokenType(str, Enum):
     ACCESS = "access"
     REFRESH = "refresh"
     VERIFICATION = "verification"
+
+class TokenName(str, Enum):
+    ACCESS_TOKEN = "access_token"
+    REFRESH_TOKEN = "refresh_token"
+    VERIFICATION_TOKEN = "verification_token"

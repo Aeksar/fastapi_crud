@@ -31,7 +31,6 @@ async def login(
         await send_verification_code(user.email, redis)
         verification_token = create_verification_token(user)
         set_tokens_to_cookie(response, verification_token=verification_token)
-        print(verification_token)
         return {"message": f"send code to {user.email}"}
     access_token = create_access_token(user)
     refresh_token = create_refresh_token(user)

@@ -51,9 +51,7 @@ class TestAuthAPI:
         assert login_response.status_code == 200
         redis = await anext(override_get_redis())
         code = await redis.get(f"2fa:{test_user["email"]}")
-        print(login_response.cookies, "ASDASD")
-        print("ASDASDASD")
-        response = test_client.post(f"{self.BASE_URL}/2fa", json={"code": code}, headers={"Authenticate": login_response.cookies.get(TokenName.VERIFICATION_TOKEN.value)})
+        response = test_client.post(f"{self.BASE_URL}/2fa", json={"code": code}, headers={"Authenticate": login_response.cookies.get(TokenName.VERIFICATION_TOKEN)})
         assert response.status_code == 200
         content = response.json()
         assert TokenName.ACCESS_TOKEN in content

@@ -9,7 +9,7 @@ app = FastAPI(
     version="1.0",
     debug=True,
     title="Task CRUD",
-    description="API для создания, обновления, удаления и получения задач")
+    description="API с крудами и аутентификацией")
 
 app.include_router(task_router, prefix=GLOBAL_PREFIX)
 app.include_router(user_router, prefix=GLOBAL_PREFIX)

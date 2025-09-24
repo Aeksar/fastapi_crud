@@ -33,6 +33,18 @@ jobs:
         ports:
           - "8080:1080"
           - "1025:1025"
+      redis:
+        image: redis:8.0-alpine
+        ports:
+          - 6379:6379
+        env:
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+        healthcheck:
+          test: ["CMD-SHELL", "redis-cli  ping"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
@@ -57,6 +69,7 @@ jobs:
         REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
         REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
         REDIS_DB: ${{ secrets.REDIS_DB }}
+        TEST_REDIS_DB: ${{ secrets.TEST_REDIS_DB }}
         
       run: |
         pytest

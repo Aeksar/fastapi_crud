@@ -26,3 +26,4 @@ async def send_email(
         port=settings.mail.port,
         hostname=settings.mail.host
     )
+    return True

@@ -3,7 +3,7 @@ from fastapi import Depends, status, HTTPException
 
 from src.settings import GLOBAL_PREFIX
 from src.db.models import User
-from src.repositories.user import UserService, get_user_service
+from src.repositories.auth import AuthRepository, get_auth_repo
 from src.utils.enums import UserRoleEnum
 
 
@@ -13,13 +13,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=token_url)
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    user_service: UserService = Depends(get_user_service)
+    user_service: AuthRepository = Depends(get_auth_repo)
  ) -> User:
     return await user_service.get_current_user(token)
 
 async def get_user_from_verification_token(
     token: str = Depends(oauth2_scheme),
-    user_service: UserService = Depends(get_user_service)
+    user_service: AuthRepository = Depends(get_auth_repo)
 ) -> User:
     return await user_service.get_current_user_from_verify(token)
     

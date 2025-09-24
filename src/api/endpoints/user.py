@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends, status
-from redis import Redis
 from typing import Optional
 from uuid import UUID
 
-from src.repositories import UserRepository, UserService
+from src.repositories.auth import AuthRepository, get_auth_repo
 from src.api.models.user import UserCreate, UserUpdate
-from src.mailing.verification import send_verification_code
-from src.repositories.user import get_user_repo, get_user_service
-from src.utils.redis import Redis, get_redis
+from src.repositories.user import get_user_repo, UserRepository
+
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -15,12 +13,10 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(
     user: UserCreate,
-    service: UserService = Depends(get_user_service),
-    redis: Redis = Depends(get_redis)
+    service: AuthRepository = Depends(get_auth_repo),
 ):
     """Эндпоинт для создания нового пользователя"""
     user = await service.registration(user)
-    await send_verification_code(user.email, redis)
     return user
 
 

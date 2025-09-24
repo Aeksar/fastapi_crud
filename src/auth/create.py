@@ -1,9 +1,12 @@
 import secrets
+from fastapi import Response
 
 from src.utils.enums import TokenType
 from src.api.models.user import UserResponse
+from src.api.models.auth import TokenInfo
 from src.auth.token import encode_jwt
 from src.settings import settings
+from src.auth.token import set_tokens_to_cookie
 
 
 def create_jwt(
@@ -43,5 +46,5 @@ def create_verification_token(user: UserResponse):
         expire_minutes=settings.auth.verification_token_expire_minutes
     )
 
-def create_code(length: int = 6) -> str:
-    return "".join(secrets.choice("0123456789") for _ in range(length))
+
+

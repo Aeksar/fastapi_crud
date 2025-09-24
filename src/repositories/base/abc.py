@@ -36,3 +36,11 @@ class BaseUserRepository(BaseCrudRepository):
     
     @abstractmethod
     async def get_by_username(self, username: str) -> TResponse: ...
+
+
+class BaseAuthRepository(BaseCrudRepository):
+    @abstractmethod
+    async def registration(self, model_create: TModel) -> TResponse: ...   
+    
+    @abstractmethod
+    async def login(self, username: str, password: str): ...

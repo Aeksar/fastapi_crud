@@ -72,3 +72,4 @@ def set_tokens_to_cookie(
             httponly=True,
             secure=True
         )
+

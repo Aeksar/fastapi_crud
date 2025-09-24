@@ -40,11 +40,6 @@ jobs:
         env:
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
-        healthcheck:
-          test: ["CMD-SHELL", "redis-cli  ping"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.12

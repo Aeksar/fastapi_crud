@@ -40,8 +40,6 @@ class AuthRepository(BaseAuthRepository):
             raise UnautorizedException()
         return user
     
-
-    
     
     async def get_current_user_from_verify(self, token: str):
         return await self._get_user_from_token(token, TokenType.VERIFICATION)

@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
 import shutil
 import pytest_asyncio
+import asyncio
 import pytest
 import json
 import os
@@ -13,6 +14,8 @@ import os
 from src.db import Base
 from src.api.endpoints.task import get_async_session, get_redis
 from src.settings.environment import settings, GLOBAL_PREFIX, BASE_DIR
+from src.api.endpoints.auth import send_verification_code_task, send_verification_link_task
+from src.mailing.verification import send_verification_link, send_verification_code
 from main import app
 
 
@@ -70,8 +73,10 @@ def auth_client(test_user, test_client: TestClient):
     cookies = dict(response.cookies)
     app.dependency_overrides[get_async_session] = override_get_db
     app.dependency_overrides[get_redis] = override_get_redis
-    with TestClient(app, cookies=cookies) as c:
-        yield c
+    for k, v in cookies.items():
+        test_client.cookies.set(k, v)
+    
+    yield test_client
 
 
 @pytest_asyncio.fixture
@@ -95,33 +100,42 @@ def test_task(test_client: TestClient, test_user: dict):
 @pytest.fixture(autouse=True, scope="session")
 def fake_certs():
     certs_dir = BASE_DIR / "certs"
-    certs_dir.mkdir(exist_ok=True)
+    if not certs_dir.exists():
+        certs_dir.mkdir(exist_ok=True)
 
-    private_path =  BASE_DIR / "certs" / "private.pem"
-    public_path =  BASE_DIR / "certs" / "public.pem"
+        private_path =  BASE_DIR / "certs" / "private.pem"
+        public_path =  BASE_DIR / "certs" / "public.pem"
 
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-    )
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
 
-    private_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption(),
-    )
+        private_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
 
-    public_pem = private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
-    
-    private_path.write_bytes(private_pem)
-    public_path.write_bytes(public_pem)
+        public_pem = private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        
+        private_path.write_bytes(private_pem)
+        public_path.write_bytes(public_pem)
 
     # monkeypatch.setattr(settings.auth, "public_key", public_path)
     # monkeypatch.setattr(settings.auth, "private_key", private_path)
-    
     yield
 
-    shutil.rmtree(certs_dir, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def use_direct_email_sending(monkeypatch):    
+    from src.tasks import mailing
+    from src.mailing.verification import send_verification_link, send_verification_code
+    
+    monkeypatch.setattr('src.api.endpoints.auth.send_verification_code_task.kiq', send_verification_code)
+    monkeypatch.setattr('src.api.endpoints.auth.send_verification_link_task.kiq', send_verification_link)
+    yield

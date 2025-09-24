@@ -36,6 +36,9 @@ class TestAuthAPI:
         assert "www-authenticate" in response.headers
 
     def test_refresh_token(self, auth_client: TestClient, test_user):
+        # response = test_client.post(f"{self.BASE_URL}/login", data=self.CREDENTIALS)
+        # refresh_cookie = dict(response.cookies)["refresh_token"]
+        # response = test_client.post(f"{self.BASE_URL}/refresh", cookies={"refresh_token": refresh_cookie})
         response = auth_client.post(f"{self.BASE_URL}/refresh")
         assert response.status_code == 200
         assert TokenName.ACCESS_TOKEN in response.json()

@@ -12,7 +12,7 @@ async def send_verification_code(recepient: str, redis: Redis):
     code = create_code()
     content = f"Ваш код подтверждения: {code}\n Срок действия кода 5 минут."
     subject = "Подтверждение попытки входа"
-    task = await send_email(
+    await send_email(
         recepient=recepient,
         subject=subject,
         text_content=content
@@ -23,4 +23,4 @@ async def send_verification_link(recepient: str, token: str):
     url = "http://localhost/" + VERIFICATION_EMAIL_LINK + token
     content = f"Перейдите по этой ссылке для подтверждения вашей почты: {url}"
     subject = "Подтверждение почты"
-    task = await send_email(recepient, subject, content)
+    await send_email(recepient, subject, content)

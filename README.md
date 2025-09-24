@@ -62,6 +62,11 @@
    python main.py
    ```
 
+6. Корректно запустите taskiq:
+   ```bash
+   taskiq worker src.tasks.config:broker --fs-discover --tasks-pattern "**/tasks"
+   ```
+
 ## Альтернативная установка (Docker)
 
 1. Клонируйте репозиторий:

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy import create_engine
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from redis.asyncio.client import Redis
 from pathlib import Path
 import shutil
 import pytest_asyncio
@@ -32,20 +33,15 @@ async def override_get_db():
 
 REDIS_DATA = {}
 async def override_get_redis():
-    class MockRedis():
-        def __init__(self):
-            self.storage = REDIS_DATA
-
-        async def get(self, key, *args, **kwargs):
-            return self.storage.get(key)
-        
-        async def set(self, key, val, *args, **kwargs):
-            self.storage[key] = val
-
-        async def delete(self, key, *args, **kwargs):
-            self.storage.pop(key)
-
-    yield MockRedis()
+    redis = Redis(
+            username=settings.REDIS_USERNAME,
+            password=settings.REDIS_PASSWORD,            
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.TEST_REDIS_DB,
+            decode_responses=True
+        ) 
+    yield redis
 
 
 @pytest.fixture(scope="function", autouse=True)

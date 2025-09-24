@@ -41,10 +41,15 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str
     REDIS_USERNAME: str
     REDIS_DB: str
+    TEST_REDIS_DB: str
 
     @property
     def REDIS_URL(self):
         return f"redis://{self.REDIS_USERNAME}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    
+    @property
+    def TEST_REDIS_URL(self):
+        return f"redis://{self.REDIS_USERNAME}:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.TEST_REDIS_DB}"
 
     @property
     def ASYNC_DATABASE_URL(self):
